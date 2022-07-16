@@ -24,7 +24,7 @@ function checksExistsUserAccount(request, response, next) {
 function checksCreateTodosUserAvailability(request, response, next) {
   const { user } = request;
 
-  if (user.pro || user.todos.lenght < 10) return next();
+  if (user.pro || Object.keys(user.todos).length < 10) return next();
 
   return response.status(403).json({
     error: "You need to change to Pro plan if do you want create more lists!",
@@ -32,8 +32,12 @@ function checksCreateTodosUserAvailability(request, response, next) {
 }
 
 function checksTodoExists(request, response, next) {
-  const { user } = request;
+  const { username } = request.headers;
   const { id } = request.params;
+
+  const user = users.find((user) => user.username === username);
+
+  if (!user) return response.status(404).json({ error: "User not found!" });
 
   if (!validate(id)) return response.status(400).json({ error: "Invalid id!" });
 
@@ -42,6 +46,7 @@ function checksTodoExists(request, response, next) {
   if (!todo) return response.status(404).json({ error: "Todo not found!" });
 
   request.todo = todo;
+  request.user = user;
 
   return next();
 }
